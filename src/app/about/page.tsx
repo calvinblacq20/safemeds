@@ -48,7 +48,7 @@ export default function AboutPage() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7 }}
-          className="relative mb-12 rounded-3xl overflow-hidden shadow-2xl border border-line h-72 sm:h-96"
+          className="relative mb-12 rounded-3xl overflow-hidden shadow-2xl border border-line h-56 sm:h-80 md:h-96"
         >
           <img
             src="/images/pexels-artempodrez-5726696.jpg"
@@ -56,9 +56,9 @@ export default function AboutPage() {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          <div className="absolute bottom-6 left-6 right-6 text-white max-w-xl">
-            <h2 className="text-2xl sm:text-3xl font-medium text-white">Dedicated to student wellness & security</h2>
-            <p className="text-sm text-white/80 mt-1">Bridging campus healthcare gaps with state-of-the-art digital infrastructure.</p>
+          <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 text-white max-w-xl">
+            <h2 className="text-xl sm:text-3xl font-medium text-white">Dedicated to student wellness & security</h2>
+            <p className="text-xs sm:text-sm text-white/80 mt-1">Bridging campus healthcare gaps with state-of-the-art digital infrastructure.</p>
           </div>
         </motion.div>
 

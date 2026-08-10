@@ -276,36 +276,31 @@ export default function Home() {
 
       <main>
         {/* Hero */}
-        <section className="mx-auto max-w-4xl px-4 pt-16 pb-20 text-center sm:px-6 sm:pt-24">
+        <section className="mx-auto max-w-4xl px-4 pt-12 pb-16 text-center sm:px-6 sm:pt-20">
           <motion.div {...fadeUp}>
-            <span className="inline-flex items-center gap-2 rounded-full bg-surface px-4 py-1.5 text-xs text-ink-muted shadow-card">
-              <span className="h-1.5 w-1.5 rounded-full bg-ok" aria-hidden />
-              Anonymous consultations, licensed pharmacists
-            </span>
-
-            <h1 className="mt-7 text-5xl text-ink sm:text-6xl md:text-7xl">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl text-ink font-normal leading-tight tracking-tight">
               Healthcare, anonymized.
               <br />
               For students.
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink-muted">
+            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-muted">
               Secure, anonymous healthcare consultations for students. Get
               professional medical advice from licensed pharmacists in a safe,
               confidential environment — all from your phone.
             </p>
 
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/signup"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-brand px-7 text-sm text-brand-ink transition-colors hover:bg-brand-hover shadow-md"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-brand px-7 text-sm text-brand-ink transition-colors hover:bg-brand-hover shadow-md font-medium"
               >
                 Create free account
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
               <Link
                 href="/consult"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-ink/15 px-7 text-sm text-ink transition-colors hover:bg-surface"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-ink/15 px-7 text-sm text-ink transition-colors hover:bg-surface font-medium"
               >
                 Start anonymous consult
               </Link>
@@ -316,33 +311,14 @@ export default function Home() {
           <motion.div
             {...fadeUp}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-14 relative mx-auto max-w-5xl"
+            className="mt-10 sm:mt-14 relative mx-auto max-w-5xl"
           >
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-line bg-surface">
               <img
                 src="/images/pexels-ninthgrid-2149521550-30677591.jpg"
                 alt="Pharmacist consultation with student"
-                className="w-full h-[380px] sm:h-[480px] object-cover object-center"
+                className="w-full h-64 sm:h-[420px] md:h-[500px] object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              
-              {/* Floating Badges */}
-              <div className="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 text-left">
-                <div className="backdrop-blur-md bg-white/20 dark:bg-black/40 p-5 rounded-2xl border border-white/20 text-white max-w-md">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-teal-300 mb-1">
-                    <ShieldCheck className="h-4 w-4" /> 100% Anonymous & Confidential
-                  </div>
-                  <h3 className="text-xl font-medium text-white">Direct Access to Verified Pharmacists</h3>
-                  <p className="text-sm text-white/80 mt-1">Get prescriptions, advice, and swift campus delivery without stigma.</p>
-                </div>
-
-                <div className="backdrop-blur-md bg-white/90 dark:bg-gray-900/90 p-4 rounded-2xl shadow-lg border border-line text-ink">
-                  <div className="text-xs">
-                    <p className="font-semibold text-ink">Always Active</p>
-                    <p className="text-ink-muted">Campus-wide Telepharmacy</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </motion.div>
         </section>
