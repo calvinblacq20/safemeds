@@ -126,9 +126,18 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg lg:flex">
-      {/* Brand panel — desktop only. The phone layout is the card alone on the
-          lavender canvas, which is what the design reference shows. */}
+    <div className="relative min-h-screen bg-slate-950 lg:bg-bg lg:flex">
+      {/* Mobile background image layer */}
+      <div className="absolute inset-0 lg:hidden overflow-hidden pointer-events-none z-0">
+        <img
+          src="/images/pexels-tima-miroshnichenko-5452224.jpg"
+          alt="Pharmacist background"
+          className="w-full h-full object-cover opacity-30 mix-blend-luminosity scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/85 to-slate-950/95" />
+      </div>
+
+      {/* Brand panel — desktop only */}
       <aside className="relative hidden lg:flex lg:w-[42%] xl:w-2/5 flex-col justify-between overflow-hidden p-10 text-white bg-slate-900">
         <img
           src="/images/pexels-tima-miroshnichenko-5452224.jpg"
@@ -156,10 +165,10 @@ export default function AuthPage() {
         </p>
       </aside>
 
-      <main className="flex flex-1 flex-col justify-center px-4 py-10 sm:px-8">
+      <main className="relative z-10 flex flex-1 flex-col justify-center px-4 py-10 sm:px-8">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-6 flex items-center justify-between lg:hidden">
-            <span className="flex items-center gap-2.5 text-ink">
+            <span className="flex items-center gap-2.5 text-white lg:text-ink">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand">
                 <ShieldPlus className="h-5 w-5 text-brand-ink" aria-hidden />
               </span>
@@ -168,7 +177,7 @@ export default function AuthPage() {
             <ThemeToggle variant="icon" size="md" />
           </div>
 
-          <div className="rounded-card bg-surface p-6 shadow-card sm:p-8">
+          <div className="rounded-card bg-surface/95 dark:bg-surface/90 backdrop-blur-xl p-6 shadow-2xl border border-line/40 sm:p-8">
             <header className="mb-6">
               <h1 className="text-2xl font-normal text-ink">Welcome back</h1>
               <p className="mt-1 text-sm text-ink-muted">
