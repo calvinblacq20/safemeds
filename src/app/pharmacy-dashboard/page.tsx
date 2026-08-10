@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -22,11 +23,30 @@ export default function PharmacyDashboard() {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* User Info Card */}
+          {/* Hero Banner */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0 }}
+            className="relative rounded-2xl overflow-hidden shadow-xl border border-purple-200 dark:border-gray-700 mb-8 h-48 sm:h-56 bg-slate-900"
+          >
+            <img
+              src="/images/pexels-tima-miroshnichenko-5452224.jpg"
+              alt="Pharmacy Team"
+              className="absolute inset-0 w-full h-full object-cover object-center opacity-60"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-950/90 via-purple-900/60 to-transparent" />
+            <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-end h-full text-white">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-white">Welcome back, {user?.name || "Pharmacist"}</h1>
+              <p className="text-sm text-purple-200 mt-1 max-w-md">Manage patient consultations, dispense prescriptions, and oversee inventory operations.</p>
+            </div>
+          </motion.div>
+
+          {/* User Info Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 border border-purple-200 dark:border-gray-700"
           >
             <div className="flex items-center justify-between">

@@ -1,8 +1,14 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 let nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
+  },
+  // A stray lockfile in the user's home directory made Next infer that folder
+  // as the workspace root, which broke module resolution paths. Pin it here.
+  turbopack: {
+    root: path.resolve(__dirname),
   },
   // Tree-shakes barrel-style imports (icon/animation libraries in particular
   // re-export hundreds of modules from one entry point) so both dev compiles

@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { isPublicRoute } from "@/lib/publicRoutes";
 
 export function useAuth() {
   const { data: session, status } = useSession();
@@ -42,15 +43,14 @@ export function useAuth() {
     return { loading: false, authorized: true };
   };
 
-  // Handle redirects in useEffect to avoid render-time navigation
-  // Only redirect if we're not already on the auth page to prevent loops
+  // Handle redirects in useEffect to avoid render-time navigation.
+  // This hook is mounted app-wide via NotificationContext/OnboardingContext, so
+  // it has to honour the same public-route list as the middleware — otherwise
+  // it drags anonymous visitors off /consult, /track and the marketing pages.
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      const currentPath = window.location.pathname;
-      if (currentPath !== "/auth" && currentPath !== "/signup" && currentPath !== "/") {
-        router.push("/auth");
-      }
-    }
+    if (isLoading || isAuthenticated) return;
+    if (isPublicRoute(window.location.pathname)) return;
+    router.push("/auth");
   }, [isLoading, isAuthenticated, router]);
 
   return {

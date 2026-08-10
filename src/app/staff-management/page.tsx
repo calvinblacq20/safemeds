@@ -410,7 +410,7 @@ export default function StaffManagementPage() {
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Staff Members</h2>
+              <h2 className="text-2xl font-normal">Staff Members</h2>
               <button
                 onClick={() => setShowStaffForm(true)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -478,7 +478,7 @@ export default function StaffManagementPage() {
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Staff Schedules</h2>
+              <h2 className="text-2xl font-normal">Staff Schedules</h2>
               <button
                 onClick={() => setShowScheduleForm(true)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -545,7 +545,7 @@ export default function StaffManagementPage() {
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Staff Shifts</h2>
+              <h2 className="text-2xl font-normal">Staff Shifts</h2>
               <button
                 onClick={() => setShowShiftForm(true)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -613,7 +613,7 @@ export default function StaffManagementPage() {
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Time Off Requests</h2>
+              <h2 className="text-2xl font-normal">Time Off Requests</h2>
               <button
                 onClick={() => setShowTimeOffForm(true)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -704,7 +704,7 @@ export default function StaffManagementPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-normal text-gray-900 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-300">Please log in to access staff management.</p>
         </div>
       </div>
@@ -715,7 +715,7 @@ export default function StaffManagementPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Staff Management</h1>
+          <h1 className="text-3xl font-normal text-gray-900 dark:text-white">Staff Management</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
             Manage pharmacy staff, schedules, shifts, and time-off requests
           </p>

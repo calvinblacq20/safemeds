@@ -56,7 +56,7 @@ export default function OnboardingWizard() {
         >
           <div className="text-center mb-6">
             <div className="text-5xl mb-4">{current.icon}</div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl font-normal text-gray-900 dark:text-white mb-2">
               {current.title}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { motion } from "framer-motion";
+import { Lock, ShieldOff } from "lucide-react";
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -42,23 +42,18 @@ export default function ProtectedRoute({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <div className="text-center">
+          <div
+            role="status"
+            aria-label="Loading"
+            className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-line border-t-ink"
           />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Loading...
-          </h2>
-          <p className="text-gray-600">Checking authentication status</p>
-        </motion.div>
+          <h2 className="text-xl text-ink">Loading…</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Checking authentication status
+          </p>
+        </div>
       </div>
     );
   }
@@ -70,20 +65,16 @@ export default function ProtectedRoute({
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
-        >
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
-            Authentication Required
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Please log in to access this page.
+      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
+        <div className="w-full max-w-md rounded-card bg-surface p-8 text-center shadow-card">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-surface-muted">
+            <Lock className="h-6 w-6 text-ink" aria-hidden />
+          </div>
+          <h1 className="text-2xl text-ink">Authentication required</h1>
+          <p className="mt-3 text-sm text-ink-muted">
+            Please sign in to access this page.
           </p>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -99,17 +90,13 @@ export default function ProtectedRoute({
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
-        >
-          <div className="text-6xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
-            Access Denied
-          </h1>
-          <p className="text-gray-600 mb-6">
+      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
+        <div className="w-full max-w-md rounded-card bg-surface p-8 text-center shadow-card">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-danger-soft">
+            <ShieldOff className="h-6 w-6 text-danger" aria-hidden />
+          </div>
+          <h1 className="text-2xl text-ink">Access denied</h1>
+          <p className="mt-3 text-sm text-ink-muted">
             You don&apos;t have permission to access this page.
             {allowedRoles.length > 0 && (
               <>
@@ -119,7 +106,7 @@ export default function ProtectedRoute({
               </>
             )}
           </p>
-        </motion.div>
+        </div>
       </div>
     );
   }

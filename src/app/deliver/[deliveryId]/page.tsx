@@ -84,7 +84,7 @@ export default function CourierSharePage() {
           <div className="w-14 h-14 mx-auto mb-3 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
             <MapPin className="w-7 h-7 text-orange-600 dark:text-orange-300" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-normal text-gray-900 dark:text-white">
             Courier Location Sharing
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

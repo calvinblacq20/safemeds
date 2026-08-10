@@ -1,30 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isPublicRoute } from '@/lib/publicRoutes'
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
- 
-  // Public routes that don't need authentication
-  const publicRoutes = [
-    '/',
-    '/auth',
-    '/signin',
-    '/signup',
-    '/verify',
-    '/about',
-    '/contact',
-    '/search',
-    '/legal',
-    '/consult',
-    '/track',
-    '/delivery'
-  ]
- 
-  // Check if current path is a public route
-  const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || pathname.startsWith(route + '/')
-  )
- 
-  if (isPublicRoute) {
+
+  if (isPublicRoute(pathname)) {
     return NextResponse.next()
   }
 

@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
           >
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h1 className="text-3xl font-normal text-gray-900 dark:text-white mb-2">
                   Analytics Dashboard
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300">

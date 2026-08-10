@@ -1,8 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { Check, Mail, MapPin, Phone } from "lucide-react";
 import Footer from "@/components/Common/Footer";
 
 export default function ContactPage() {
@@ -27,16 +29,16 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-bg">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+      <nav className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
+          <Link href="/" className="text-xl tracking-tight text-ink">
             SafeMeds
           </Link>
           <Link
             href="/"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="text-sm text-ink-muted transition-colors hover:text-ink"
           >
             ← Back to Home
           </Link>
@@ -48,14 +50,33 @@ export default function ContactPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-10"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="mb-3 text-4xl text-ink md:text-5xl">
             Contact Us
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="text-lg text-ink-muted">
             Have a question, concern, or feedback? We&apos;d love to hear from you.
           </p>
+        </motion.div>
+
+        {/* Visual Banner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="relative mb-10 rounded-3xl overflow-hidden shadow-xl border border-line h-48 sm:h-60"
+        >
+          <img
+            src="/images/pexels-ninthgrid-2149521550-30677591.jpg"
+            alt="Doctor consultation and patient support"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="absolute bottom-5 left-6 right-6 text-white">
+            <h2 className="text-xl sm:text-2xl font-medium text-white">We&apos;re here for your health & peace of mind</h2>
+            <p className="text-xs sm:text-sm text-white/80 mt-1">Our support team and pharmacists are ready to answer your inquiries.</p>
+          </div>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -66,46 +87,46 @@ export default function ContactPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="space-y-6"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="rounded-card bg-surface p-6 shadow-card">
+              <h2 className="mb-4 text-lg text-ink">
                 Get in touch
               </h2>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="text-xl">📧</span>
+                  <Mail className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Email</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">support@safemeds.com</p>
+                    <p className="font-medium text-ink">Email</p>
+                    <p className="text-sm text-ink-muted">support@safemeds.com</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-xl">📱</span>
+                  <Phone className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Phone</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">+233 50 123 4567</p>
+                    <p className="font-medium text-ink">Phone</p>
+                    <p className="text-sm text-ink-muted">+233 50 123 4567</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-xl">📍</span>
+                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Location</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">KNUST, Kumasi, Ghana</p>
+                    <p className="font-medium text-ink">Location</p>
+                    <p className="text-sm text-ink-muted">KNUST, Kumasi, Ghana</p>
                   </div>
                 </li>
               </ul>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <div className="rounded-card bg-surface p-6 shadow-card">
+              <h2 className="mb-2 text-lg text-ink">
                 Need help now?
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="mb-4 text-sm text-ink-muted">
                 For urgent medical concerns, please visit your nearest health
                 facility or call emergency services. SafeMeds is not a
                 replacement for emergency care.
               </p>
               <Link
                 href="/consult"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                className="text-sm font-semibold text-brand hover:underline"
               >
                 Start an anonymous consultation →
               </Link>
@@ -119,25 +140,25 @@ export default function ContactPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             {sent ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg text-center">
-                <div className="text-4xl mb-4">✅</div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              <div className="rounded-card bg-surface p-8 text-center shadow-card">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-ok-soft"><Check className="h-6 w-6 text-ok" aria-hidden /></div>
+                <h2 className="mb-2 text-xl text-ink">
                   Message sent!
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="mb-6 text-ink-muted">
                   We&apos;ll get back to you within 24 hours.
                 </p>
                 <button
                   onClick={() => { setSent(false); setForm({ name: "", email: "", subject: "", message: "" }); }}
-                  className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                  className="text-sm font-semibold text-brand hover:underline"
                 >
                   Send another message
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5 rounded-card bg-surface p-8 shadow-card">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="mb-1.5 block text-sm font-medium text-ink">
                     Name
                   </label>
                   <input
@@ -145,11 +166,11 @@ export default function ContactPage() {
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full h-12 px-4 rounded-2xl border border-line bg-surface-muted text-ink placeholder:text-ink-faint transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="mb-1.5 block text-sm font-medium text-ink">
                     Email
                   </label>
                   <input
@@ -157,11 +178,11 @@ export default function ContactPage() {
                     required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full h-12 px-4 rounded-2xl border border-line bg-surface-muted text-ink placeholder:text-ink-faint transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="mb-1.5 block text-sm font-medium text-ink">
                     Subject
                   </label>
                   <input
@@ -169,11 +190,11 @@ export default function ContactPage() {
                     required
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full h-12 px-4 rounded-2xl border border-line bg-surface-muted text-ink placeholder:text-ink-faint transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="mb-1.5 block text-sm font-medium text-ink">
                     Message
                   </label>
                   <textarea
@@ -181,15 +202,15 @@ export default function ContactPage() {
                     rows={5}
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                    className="w-full px-4 rounded-2xl border border-line bg-surface-muted text-ink placeholder:text-ink-faint transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none py-3"
                   />
                 </div>
                 {error && (
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                  <p className="text-sm text-danger">{error}</p>
                 )}
                 <button
                   type="submit"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-full bg-brand text-sm text-brand-ink transition-colors hover:bg-brand-hover"
                 >
                   Send Message
                 </button>

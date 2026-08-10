@@ -1,57 +1,46 @@
-import {
-  getAnalytics,
-  logEvent,
-  setUserId,
-  setUserProperties,
-  Analytics,
-} from "firebase/analytics";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { app } from "./firebase";
 
-// Initialize Firebase Analytics (only in browser environment)
-let analytics: Analytics | null = null;
-
-if (typeof window !== "undefined") {
-  try {
-    analytics = getAnalytics(app);
-  } catch (error) {
-    console.warn("Firebase Analytics initialization failed:", error);
-  }
-}
-
 // Analytics event tracking functions
-export const trackEvent = (
+export const trackEvent = async (
   eventName: string,
   parameters?: Record<string, unknown>
 ) => {
-  if (!analytics) {
-    console.warn("Analytics not available");
-    return;
-  }
+  if (typeof window === "undefined") return;
 
   try {
-    logEvent(analytics, eventName, parameters);
+    const mod: any = await import("firebase/analytics");
+    const getAnalytics = mod.getAnalytics || mod.default?.getAnalytics;
+    const logEvent = mod.logEvent || mod.default?.logEvent;
+    if (getAnalytics && logEvent) {
+      const analytics = getAnalytics(app);
+      logEvent(analytics, eventName, parameters);
+    }
   } catch (error) {
-    console.error("Failed to track analytics event:", error);
+    console.warn("Analytics event tracking skipped or failed:", error);
   }
 };
 
-export const setUserAnalytics = (
+export const setUserAnalytics = async (
   userId: string,
   userProperties?: Record<string, unknown>
 ) => {
-  if (!analytics) {
-    console.warn("Analytics not available");
-    return;
-  }
+  if (typeof window === "undefined") return;
 
   try {
-    setUserId(analytics, userId);
-    if (userProperties) {
-      setUserProperties(analytics, userProperties);
+    const mod: any = await import("firebase/analytics");
+    const getAnalytics = mod.getAnalytics || mod.default?.getAnalytics;
+    const setUserId = mod.setUserId || mod.default?.setUserId;
+    const setUserProperties = mod.setUserProperties || mod.default?.setUserProperties;
+    if (getAnalytics && setUserId) {
+      const analytics = getAnalytics(app);
+      setUserId(analytics, userId);
+      if (userProperties && setUserProperties) {
+        setUserProperties(analytics, userProperties);
+      }
     }
-    // User analytics set
   } catch (error) {
-    console.error("Failed to set user analytics:", error);
+    console.warn("User analytics setting skipped or failed:", error);
   }
 };
 
@@ -273,4 +262,4 @@ export const trackConsultationCompleted = (
   });
 };
 
-export { analytics };
+export const analytics = null;

@@ -30,12 +30,19 @@ export async function GET(request: NextRequest) {
       where.type = type;
     }
 
-    // If user is a pharmacist, show consultations assigned to them or unassigned
-    if (session.user.role === "PHARMACY") {
+    // Scope every role explicitly. Without this a CLIENT fell through with an
+    // empty `where` and read every patient's consultation — symptoms,
+    // medications and allergies included.
+    if (session.user.role === "CLIENT") {
+      where.userId = session.user.id;
+    } else if (session.user.role === "PHARMACY") {
+      // Their own queue plus anything not yet picked up.
       where.OR = [
         { assignedPharmacistId: session.user.id },
         { assignedPharmacistId: null },
       ];
+    } else if (session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const consultations = await prisma.consultation.findMany({
@@ -95,6 +102,9 @@ export async function GET(request: NextRequest) {
 // POST - Create new consultation (supports anonymous)
 export async function POST(request: NextRequest) {
   try {
+    // Anonymous consultations are intentionally unauthenticated, so a missing
+    // session is not an error here — it just decides which branch we take.
+    const session = await auth();
     const body = await request.json();
     const {
       type,
@@ -116,12 +126,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For anonymous consultations, generate anonymousId if not provided
+    // Treat it as anonymous only when the caller asked for it AND there's no
+    // session — otherwise a signed-in user's consultation was created with a
+    // null userId and they could never see it again.
+    const anonymous = isAnonymous || !session?.user;
+
     let finalAnonymousId = anonymousId;
-    if (isAnonymous && !anonymousId) {
+    if (anonymous && !anonymousId) {
       finalAnonymousId = `anon_${Date.now()}_${Math.random()
         .toString(36)
-        .substr(2, 9)}`;
+        .slice(2, 11)}`;
     }
 
     const consultation = await prisma.consultation.create({
@@ -133,8 +147,9 @@ export async function POST(request: NextRequest) {
         allergies,
         age: age ? parseInt(age) : null,
         gender,
-        isAnonymous,
-        anonymousId: finalAnonymousId,
+        isAnonymous: anonymous,
+        anonymousId: anonymous ? finalAnonymousId : null,
+        userId: anonymous ? null : session!.user.id,
         status: "PENDING",
       },
       include: {

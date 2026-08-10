@@ -1,20 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import Link from "next/link";
+import {
+  Info,
+  LogOut,
+  Menu,
+  MessageCircle,
+  ClipboardList,
+  Truck,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
+import { cn } from "@/lib/cn";
 
 interface NavigationProps {
   title: string;
   userRole: "client" | "pharmacy" | "admin";
 }
 
+const LINKS = [
+  { label: "Consult", href: "/consult", icon: ClipboardList },
+  { label: "Chat", href: "/chat", icon: MessageCircle },
+  { label: "Delivery", href: "/delivery", icon: Truck },
+  { label: "About", href: "/about", icon: Info },
+];
+
 export default function Navigation({ title, userRole }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const router = useRouter();
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
@@ -27,199 +43,96 @@ export default function Navigation({ title, userRole }: NavigationProps) {
     }
   };
 
-  const getRoleIcon = () => {
-    if (userRole === "client") return "👥";
-    if (userRole === "pharmacy") return "💊";
-    if (userRole === "admin") return "👑";
-    return "👤";
-  };
-
-  const getRoleColor = () => {
-    if (userRole === "client") return "from-blue-500 to-blue-600";
-    if (userRole === "pharmacy") return "from-purple-500 to-purple-600";
-    if (userRole === "admin") return "from-red-500 to-red-600";
-    return "from-gray-500 to-gray-600";
-  };
-
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          {/* Logo and Title */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-4"
+    <div className="px-4 pt-5 sm:px-6">
+      <nav className="mx-auto flex max-w-5xl items-center gap-3 rounded-full bg-surface px-4 py-2.5 shadow-card sm:px-6">
+        {/* Pages embed this component for their page title, so this is the
+            document's h1 — pages must not render another one. */}
+        <h1 className="min-w-0 truncate text-lg tracking-tight text-ink">
+          {title}
+        </h1>
+
+        <div className="ml-6 hidden items-center gap-6 md:flex">
+          {LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-sm text-ink-muted transition-colors hover:text-ink"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <NotificationBell />
+          <ThemeToggle variant="icon" size="md" />
+
+          <span className="hidden max-w-[12rem] truncate px-2 text-sm text-ink-muted lg:inline">
+            {user?.email || user?.username}
+            <span className="sr-only"> — {userRole} account</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className={cn(
+              "hidden h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-sm",
+              "text-ink transition-colors hover:bg-surface-muted",
+              "disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex",
+            )}
           >
-            <div
-              className={`w-10 h-10 bg-gradient-to-r ${getRoleColor()} rounded-lg flex items-center justify-center`}
-            >
-              <span className="text-xl text-white">{getRoleIcon()}</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                {title}
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Welcome, {user?.name || "User"}
-              </p>
-            </div>
-          </motion.div>
+            <LogOut className="h-4 w-4" aria-hidden />
+            {isLoggingOut ? "Signing out…" : "Sign out"}
+          </button>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-6">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push("/about")}
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
-            >
-              ℹ️ About
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push("/chat")}
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
-            >
-              💬 Chat
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push("/delivery")}
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
-            >
-              📦 Delivery
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push("/consult")}
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
-            >
-              📋 Consult
-            </motion.button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((open) => !open)}
+            aria-expanded={isMenuOpen}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink transition-colors hover:bg-surface-muted md:hidden"
+          >
+            {isMenuOpen ? (
+              <X className="h-5 w-5" aria-hidden />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden />
+            )}
+          </button>
+        </div>
+      </nav>
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-4">
-            {/* Notifications */}
-            <NotificationBell />
+      {isMenuOpen && (
+        <div className="mx-auto mt-2 max-w-5xl rounded-card bg-surface p-3 shadow-card md:hidden">
+          {LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsMenuOpen(false)}
+              className="flex min-h-11 items-center gap-3 rounded-2xl px-4 text-sm text-ink transition-colors hover:bg-surface-muted"
+            >
+              <link.icon className="h-4 w-4 text-ink-muted" aria-hidden />
+              {link.label}
+            </Link>
+          ))}
 
-            {/* User Info */}
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.email || user?.username}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                {userRole} Account
-              </p>
-            </div>
-
-            {/* Logout Button */}
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: isLoggingOut ? 1 : 1.05 }}
-              whileTap={{ scale: isLoggingOut ? 1 : 0.98 }}
+          <div className="mt-2 border-t border-line pt-2">
+            <p className="truncate px-4 py-2 text-xs text-ink-muted">
+              {user?.email || user?.username} · {userRole} account
+            </p>
+            <button
+              type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-                isLoggingOut
-                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                  : "bg-red-500 text-white hover:bg-red-600"
-              }`}
+              className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-2xl px-4 text-sm text-ink transition-colors hover:bg-surface-muted disabled:opacity-50"
             >
-              {isLoggingOut ? (
-                <div className="flex items-center gap-2">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                  />
-                  <span>Logging out...</span>
-                </div>
-              ) : (
-                "Logout"
-              )}
-            </motion.button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+              <LogOut className="h-4 w-4 text-ink-muted" aria-hidden />
+              {isLoggingOut ? "Signing out…" : "Sign out"}
             </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{
-            opacity: isMenuOpen ? 1 : 0,
-            height: isMenuOpen ? "auto" : 0,
-          }}
-          transition={{ duration: 0.3 }}
-          className="md:hidden overflow-hidden"
-        >
-          <div className="py-4 space-y-3 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => {
-                router.push("/chat");
-                setIsMenuOpen(false);
-              }}
-              className="block w-full text-left px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              💬 Chat with Pharmacist
-            </button>
-            <button
-              onClick={() => {
-                router.push("/delivery");
-                setIsMenuOpen(false);
-              }}
-              className="block w-full text-left px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              📦 Track Delivery
-            </button>
-            <button
-              onClick={() => {
-                router.push("/consult");
-                setIsMenuOpen(false);
-              }}
-              className="block w-full text-left px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              📋 Book Consultation
-            </button>
-            <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {user?.email || user?.username}
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 capitalize">
-                {userRole} Account
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </nav>
+      )}
+    </div>
   );
 }

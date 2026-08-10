@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Albert_Sans, Geist } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/Auth/SessionProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { OnboardingProvider } from "@/context/OnboardingContext";
 import OnboardingWizard from "@/components/Common/OnboardingWizard";
-import NavButtons from "@/components/Common/NavButtons";
-import ThemeToggle from "@/components/Common/ThemeToggle";
 
-const poppins = Poppins({
+// Body copy. The reference sets body text at weight 500, so 500 ships.
+const geist = Geist({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-poppins",
+  variable: "--font-geist",
+});
+
+// Display face for headings, used at weight 400 — see --font-display.
+const albert = Albert_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-albert",
 });
 
 export const metadata: Metadata = {
@@ -28,17 +34,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${poppins.className} ${poppins.variable} antialiased`}>
+    // Font variables live on <html> so :root can resolve --font-display; on
+    // <body> they would be out of scope for the :root token that uses them.
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geist.variable} ${albert.variable}`}
+    >
+      <body className={`${geist.className} antialiased`}>
         <ThemeProvider>
           <SessionProvider>
             <NotificationProvider>
               <OnboardingProvider>
-                <NavButtons />
-                {/* Global theme toggle — available on every page */}
-                <div className="fixed bottom-4 right-3 z-[60] print:hidden">
-                  <ThemeToggle variant="icon" size="sm" />
-                </div>
+                {/* Back navigation and the theme toggle now live in the app
+                    chrome (PageHeader / SideNav) rather than floating over
+                    every page, where they collided with the bottom nav. */}
                 {children}
                 <OnboardingWizard />
               </OnboardingProvider>

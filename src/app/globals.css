@@ -4,26 +4,169 @@
    `.dark` class that ThemeContext toggles on <html> instead. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---------------------------------------------------------------------------
+   Design tokens
+   Palette follows the Grovia reference: a warm cream canvas with translucent
+   white cards floating on it, black carrying every primary action, and a set
+   of soft pastels used as flat category fills. Shadows are warm-tinted rather
+   than grey so they sit inside the cream rather than dirtying it.
+
+   Dark mode has no counterpart in the reference, so it inverts the same
+   relationships — a warm near-black canvas, and the brand flips to cream with
+   dark text, because a black button on a black canvas would disappear.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --bg: #f4f2ee;
+  --surface: #ffffff;
+  --surface-muted: #f0ece6;
+  --surface-sunken: #e9e4db;
+  --line: #e1d8c6;
+
+  /* Text */
+  --ink: #000000;
+  --ink-muted: #605f5f;
+  --ink-faint: #8f8c86;
+
+  /* Brand — the reference drives every primary action with flat black. */
+  --brand: #000000;
+  --brand-hover: #262626;
+  --brand-soft: #ebe7e0;
+  --brand-ink: #ffffff;
+
+  /* Pastel accents, used as flat category fills. Each is paired with black
+     text in the reference, so they stay light enough to carry it. */
+  --accent-cyan: #84e6f6;
+  --accent-coral: #f7a49e;
+  --accent-yellow: #fecd1a;
+  --accent-butter: #fef7af;
+
+  /* Status */
+  --gold: #fecd1a;
+  --ok: #1f9d63;
+  --ok-soft: #e2f2e9;
+  --warn: #b57e12;
+  --warn-soft: #fdf2d8;
+  --danger: #d13b3b;
+  --danger-soft: #fbe9e7;
+
+  /* Elevation — the reference's warm, offset drop shadow. */
+  --shadow-card: -3px 15px 25px rgba(104, 99, 80, 0.15);
+  --shadow-raised: -3px 20px 40px rgba(104, 99, 80, 0.22);
+  --shadow-brand: 0 8px 20px -6px rgba(0, 0, 0, 0.25);
+
+  /* Declared here rather than only in @theme: `@theme inline` resolves its
+     font tokens into utilities without emitting a usable custom property, so
+     var(--font-display) below would otherwise resolve to nothing. The
+     var(--font-albert) inside is substituted at the element that uses it,
+     where the body-level font variable is in scope. */
+  --font-display: var(--font-albert), var(--font-geist), system-ui, sans-serif;
+
+  --background: var(--bg);
+  --foreground: var(--ink);
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --bg: #14120f;
+  --surface: #1e1b17;
+  --surface-muted: #262218;
+  --surface-sunken: #1a1713;
+  --line: #35302a;
+
+  --ink: #f4f2ee;
+  --ink-muted: #a8a29a;
+  --ink-faint: #7d786f;
+
+  /* Inverted: cream fill, dark text. */
+  --brand: #f4f2ee;
+  --brand-hover: #ffffff;
+  --brand-soft: #2b2620;
+  --brand-ink: #14120f;
+
+  --accent-cyan: #5fc4d6;
+  --accent-coral: #d98079;
+  --accent-yellow: #d9ae1c;
+  --accent-butter: #c9c07a;
+
+  --gold: #d9ae1c;
+  --ok: #4ec98d;
+  --ok-soft: #17301f;
+  --warn: #e0b25c;
+  --warn-soft: #33280f;
+  --danger: #ef7d7d;
+  --danger-soft: #3a1d1b;
+
+  --shadow-card: -3px 15px 25px rgba(0, 0, 0, 0.5);
+  --shadow-raised: -3px 20px 40px rgba(0, 0, 0, 0.65);
+  --shadow-brand: 0 8px 20px -6px rgba(0, 0, 0, 0.6);
+
+  --background: var(--bg);
+  --foreground: var(--ink);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-poppins), system-ui, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-coral: var(--accent-coral);
+  --color-accent-yellow: var(--accent-yellow);
+  --color-accent-butter: var(--accent-butter);
+
+  --color-gold: var(--gold);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  /* Kept for the handful of components still reading the old names. */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+
+  --radius-card: 1.5rem;
+  --radius-panel: 2rem;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-brand: var(--shadow-brand);
+
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+  /* Headings in the reference are Albert Sans at weight 400 — the lightness
+     is the point, so display type must not be bolded. */
+  --font-display: var(--font-albert), var(--font-geist), system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--ink);
+  /* The reference sets body copy at weight 500, not 400. */
+  font-weight: 500;
+}
+
+/* Display type: Albert Sans, weight 400, tight leading and slightly negative
+   tracking. Utilities still win over this, so headings must not carry
+   `font-bold` — that would undo the lightness the reference depends on. */
+html h1,
+html h2,
+html h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 /* Only animate theme-affecting properties on the document roots, not every
@@ -33,6 +176,33 @@ body {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+/* Focus ring — one definition so every interactive element in the app agrees.
+   :focus-visible only, so pointer users never see it. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Horizontal card rails (categories, doctor cards, date strip). Scroll padding
+   keeps the first/last card off the viewport edge when snapping. */
+.rail {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail > * {
+  scroll-snap-align: start;
+  flex: none;
+}
+
 /* Cursor-tracking spotlight highlight, adapted from React Bits'
    SpotlightCard (https://reactbits.dev/components/spotlight-card). The
    mouse position is written to these custom properties via onMouseMove
@@ -40,7 +210,7 @@ body {
 .rb-spotlight {
   --mouse-x: 50%;
   --mouse-y: 50%;
-  --spotlight-color: rgba(59, 130, 246, 0.15);
+  --spotlight-color: rgba(76, 125, 240, 0.13);
   isolation: isolate;
 }
 
@@ -90,5 +260,13 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .marquee-track {
     animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,9 +1,13 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import ThreadsBackground from "@/components/effects/ThreadsBackground";
+import { Lock, ShieldPlus } from "lucide-react";
+import ThemeToggle from "@/components/Common/ThemeToggle";
+import { Button, TextField } from "@/components/ui";
+import { cn } from "@/lib/cn";
 
 interface FormData {
   username: string;
@@ -12,9 +16,17 @@ interface FormData {
   licenseNumber: string;
 }
 
-interface FormErrors {
-  [key: string]: string;
-}
+type Role = "CLIENT" | "PHARMACY" | "ADMIN";
+
+const ROLES: { value: Role; label: string; needs: string }[] = [
+  { value: "CLIENT", label: "Student", needs: "username + password" },
+  {
+    value: "PHARMACY",
+    label: "Pharmacist",
+    needs: "email + license number + password",
+  },
+  { value: "ADMIN", label: "Admin", needs: "username + password" },
+];
 
 export default function AuthPage() {
   const [formData, setFormData] = useState<FormData>({
@@ -23,10 +35,9 @@ export default function AuthPage() {
     password: "",
     licenseNumber: "",
   });
-
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [userType, setUserType] = useState<"CLIENT" | "PHARMACY" | "ADMIN">("CLIENT");
+  const [userType, setUserType] = useState<Role>("CLIENT");
   const [showPassword, setShowPassword] = useState(false);
 
   const { data: session, status } = useSession();
@@ -38,36 +49,32 @@ export default function AuthPage() {
         session.user.role === "ADMIN"
           ? "/admin"
           : session.user.role === "PHARMACY"
-          ? "/pharmacy-dashboard"
-          : "/client-dashboard";
+            ? "/pharmacy-dashboard"
+            : "/client-dashboard";
       router.replace(dashboardPath);
     }
   }, [status, session, router]);
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const next: Record<string, string> = {};
 
     if (userType === "PHARMACY") {
       if (!formData.email.trim()) {
-        newErrors.email = "Email is required.";
+        next.email = "Email is required.";
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Enter a valid email address.";
+        next.email = "Enter a valid email address.";
       }
       if (!formData.licenseNumber.trim()) {
-        newErrors.licenseNumber = "License number is required.";
+        next.licenseNumber = "License number is required.";
       }
-    } else {
-      if (!formData.username.trim()) {
-        newErrors.username = "Username is required.";
-      }
+    } else if (!formData.username.trim()) {
+      next.username = "Username is required.";
     }
 
-    if (!formData.password) {
-      newErrors.password = "Password is required.";
-    }
+    if (!formData.password) next.password = "Password is required.";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -95,10 +102,16 @@ export default function AuthPage() {
               role: userType,
             };
 
-      const result = await signIn("credentials", { ...loginParams, redirect: false });
+      const result = await signIn("credentials", {
+        ...loginParams,
+        redirect: false,
+      });
 
       if (result?.error) {
-        setErrors({ general: "Invalid credentials. Please check your details and try again." });
+        // Deliberately generic: never reveal which half of the pair was wrong.
+        setErrors({
+          general: "Invalid credentials. Check your details and try again.",
+        });
       }
     } catch {
       setErrors({ general: "Something went wrong. Please try again." });
@@ -112,220 +125,188 @@ export default function AuthPage() {
     setErrors({});
   };
 
-  const roles = [
-    { value: "CLIENT", label: "Student" },
-    { value: "PHARMACY", label: "Pharmacist" },
-    { value: "ADMIN", label: "Admin" },
-  ];
-
   return (
-    <div className="min-h-screen flex bg-white dark:bg-gray-950">
-      {/* Left brand panel */}
-      <div className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 flex-col justify-between overflow-hidden bg-gray-950 dark:bg-black p-10">
-        <ThreadsBackground
-          wrapperClassName="absolute inset-0 pointer-events-none opacity-50"
-          color={[0.36, 0.29, 1]}
-          amplitude={1.2}
-          distance={0.2}
-          enableMouseInteraction
+    <div className="min-h-screen bg-bg lg:flex">
+      {/* Brand panel — desktop only. The phone layout is the card alone on the
+          lavender canvas, which is what the design reference shows. */}
+      <aside className="relative hidden lg:flex lg:w-[42%] xl:w-2/5 flex-col justify-between overflow-hidden p-10 text-white bg-slate-900">
+        <img
+          src="/images/pexels-tima-miroshnichenko-5452224.jpg"
+          alt="Pharmacist team"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-40 mix-blend-luminosity scale-105"
         />
-        <div className="relative">
-          <span className="text-white text-xl font-semibold tracking-tight">SafeMeds</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-900/60" />
+
+        <div className="relative z-10 flex items-center gap-2.5">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-brand-ink shadow-lg">
+            <ShieldPlus className="h-6 w-6" aria-hidden />
+          </span>
+          <span className="text-2xl font-bold tracking-tight text-white">SafeMeds</span>
         </div>
-        <div className="relative">
-          <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-            Secure healthcare management platform for students and licensed pharmacists.
-            All data is encrypted end-to-end.
+
+        <div className="relative z-10 my-auto backdrop-blur-md bg-white/10 p-6 rounded-3xl border border-white/20 text-white shadow-2xl">
+          <h2 className="text-2xl font-medium text-white mb-2">Private & Seamless Campus Healthcare</h2>
+          <p className="text-sm leading-relaxed text-white/80">
+            Sign in to access your consultations, review prescriptions, track order deliveries, or chat with verified campus pharmacists.
           </p>
         </div>
-        <p className="relative text-gray-600 text-xs">
+
+        <p className="relative z-10 text-xs text-white/60">
           &copy; {new Date().getFullYear()} SafeMeds. All rights reserved.
         </p>
-      </div>
+      </aside>
 
-      {/* Right form panel */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16 xl:px-24">
-        <div className="w-full max-w-sm mx-auto">
+      <main className="flex flex-1 flex-col justify-center px-4 py-10 sm:px-8">
+        <div className="mx-auto w-full max-w-md">
+          <div className="mb-6 flex items-center justify-between lg:hidden">
+            <span className="flex items-center gap-2.5 text-ink">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand">
+                <ShieldPlus className="h-5 w-5 text-brand-ink" aria-hidden />
+              </span>
+              <span className="text-lg font-bold tracking-tight">SafeMeds</span>
+            </span>
+            <ThemeToggle variant="icon" size="md" />
+          </div>
 
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Sign in</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              No account?{" "}
-              <button
-                onClick={() => router.push("/signup")}
-                className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+          <div className="rounded-card bg-surface p-6 shadow-card sm:p-8">
+            <header className="mb-6">
+              <h1 className="text-2xl font-normal text-ink">Welcome back</h1>
+              <p className="mt-1 text-sm text-ink-muted">
+                No account?{" "}
+                <button
+                  onClick={() => router.push("/signup")}
+                  className="cursor-pointer font-semibold text-brand hover:text-brand-hover transition-colors"
+                >
+                  Create one
+                </button>
+              </p>
+            </header>
+
+            {/* Role selector — segmented control, same pill language as the
+                filter chips elsewhere in the app. */}
+            <div className="mb-6">
+              <p className="mb-2 text-sm font-medium text-ink">Sign in as</p>
+              <div
+                role="tablist"
+                aria-label="Account type"
+                className="flex gap-1 rounded-2xl bg-surface-muted p-1"
               >
-                Create one
-              </button>
-            </p>
-          </div>
-
-          {/* Role tabs */}
-          <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-              Sign in as
-            </label>
-            <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 p-1 bg-gray-50 dark:bg-gray-900 gap-1">
-              {roles.map((role) => (
-                <button
-                  key={role.value}
-                  type="button"
-                  onClick={() => {
-                    setUserType(role.value as "CLIENT" | "PHARMACY" | "ADMIN");
-                    resetForm();
-                  }}
-                  className={`flex-1 py-2 text-xs font-medium rounded-md transition-colors ${
-                    userType === role.value
-                      ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                  }`}
-                >
-                  {role.label}
-                </button>
-              ))}
+                {ROLES.map((role) => {
+                  const selected = userType === role.value;
+                  return (
+                    <button
+                      key={role.value}
+                      role="tab"
+                      type="button"
+                      aria-selected={selected}
+                      onClick={() => {
+                        setUserType(role.value);
+                        resetForm();
+                      }}
+                      className={cn(
+                        "h-11 flex-1 cursor-pointer rounded-xl text-sm font-medium",
+                        "transition-colors duration-200",
+                        selected
+                          ? "bg-brand text-brand-ink shadow-brand"
+                          : "text-ink-muted hover:text-ink",
+                      )}
+                    >
+                      {role.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Field: email (Pharmacist) or username (Client/Admin) */}
-            {userType === "PHARMACY" ? (
-              <Field label="Email" error={errors.email} required>
-                <input
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              {userType === "PHARMACY" ? (
+                <TextField
+                  label="Email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="pharmacist@example.com"
+                  required
                   autoComplete="email"
-                  className={inputClass(!!errors.email)}
+                  placeholder="pharmacist@example.com"
+                  value={formData.email}
+                  error={errors.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                 />
-              </Field>
-            ) : (
-              <Field label="Username" error={errors.username} required>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => handleInputChange("username", e.target.value)}
-                  placeholder="your_username"
+              ) : (
+                <TextField
+                  label="Username"
+                  required
                   autoComplete="username"
-                  className={inputClass(!!errors.username)}
+                  placeholder="your_username"
+                  value={formData.username}
+                  error={errors.username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
                 />
-              </Field>
-            )}
+              )}
 
-            {/* License number (Pharmacist only) */}
-            {userType === "PHARMACY" && (
-              <Field label="License number" error={errors.licenseNumber} required>
-                <input
-                  type="text"
-                  value={formData.licenseNumber}
-                  onChange={(e) => handleInputChange("licenseNumber", e.target.value)}
-                  placeholder="e.g. RPh-123456"
+              {userType === "PHARMACY" && (
+                <TextField
+                  label="License number"
+                  required
                   autoComplete="off"
-                  className={inputClass(!!errors.licenseNumber)}
+                  placeholder="e.g. RPh-123456"
+                  hint="Must match the license number on your account."
+                  value={formData.licenseNumber}
+                  error={errors.licenseNumber}
+                  onChange={(e) =>
+                    handleInputChange("licenseNumber", e.target.value)
+                  }
                 />
-                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                  Must match the license number on your account.
-                </p>
-              </Field>
-            )}
+              )}
 
-            {/* Password */}
-            <Field label="Password" error={errors.password} required>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  className={inputClass(!!errors.password) + " pr-16"}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-xs font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  tabIndex={-1}
+              <TextField
+                label="Password"
+                required
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                value={formData.password}
+                error={errors.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="h-11 cursor-pointer rounded-lg px-3 text-xs font-semibold text-ink-muted transition-colors hover:text-ink"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                }
+              />
+
+              {errors.general && (
+                <p
+                  role="alert"
+                  className="rounded-2xl bg-danger-soft px-4 py-3 text-sm text-danger"
                 >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </Field>
+                  {errors.general}
+                </p>
+              )}
 
-            {/* Error banner */}
-            {errors.general && (
-              <div className="rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-                {errors.general}
-              </div>
-            )}
+              <Button type="submit" size="lg" fullWidth loading={isLoading}>
+                {isLoading ? "Signing in…" : "Sign in"}
+              </Button>
+            </form>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 dark:disabled:bg-indigo-800 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed mt-2"
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-            </button>
-          </form>
-
-          {/* What each role needs */}
-          <div className="mt-8 rounded-lg border border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800 text-xs text-gray-500 dark:text-gray-400">
-            <div className="px-4 py-3">
-              <span className="font-medium text-gray-700 dark:text-gray-300">Student</span>
-              &nbsp;&mdash; username + password
-            </div>
-            <div className="px-4 py-3">
-              <span className="font-medium text-gray-700 dark:text-gray-300">Pharmacist</span>
-              &nbsp;&mdash; email + license number + password
-            </div>
-            <div className="px-4 py-3">
-              <span className="font-medium text-gray-700 dark:text-gray-300">Admin</span>
-              &nbsp;&mdash; username + password
-            </div>
+            <dl className="mt-6 space-y-2 border-t border-line pt-5 text-xs text-ink-muted">
+              {ROLES.map((role) => (
+                <div key={role.value} className="flex gap-1.5">
+                  <dt className="font-semibold text-ink">{role.label}</dt>
+                  <dd>— {role.needs}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
-          <p className="mt-6 text-xs text-gray-400 dark:text-gray-600 text-center">
-            All data is encrypted and handled in accordance with HIPAA guidelines.
+          <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-ink-muted">
+            <Lock className="h-3.5 w-3.5" aria-hidden />
+            Encrypted and handled per HIPAA guidelines.
           </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ---- Helpers ----
-
-function inputClass(hasError: boolean): string {
-  return [
-    "w-full px-3 py-2 rounded-lg text-sm border bg-white dark:bg-gray-900",
-    "text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600",
-    "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors",
-    hasError
-      ? "border-red-400 dark:border-red-600"
-      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
-  ].join(" ");
-}
-
-function Field({
-  label,
-  error,
-  required,
-  children,
-}: {
-  label: React.ReactNode;
-  error: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-        {label}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
-      </label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      </main>
     </div>
   );
 }

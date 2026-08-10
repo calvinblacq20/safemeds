@@ -1,4 +1,5 @@
-import { initializeApp } from "firebase/app";
+// @ts-expect-error firebase/app type declaration resolution
+import { initializeApp, setLogLevel } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, type User } from "firebase/auth";
 import {
   getFirestore,
@@ -6,7 +7,6 @@ import {
   disableNetwork,
 } from "firebase/firestore";
 import { getRemoteConfig, type RemoteConfig } from "firebase/remote-config";
-import { setLogLevel } from "firebase/app";
 
 // Firebase configuration (values from env so they can differ per environment).
 // The keys are prefixed NEXT_PUBLIC_ so Next.js inlines them at build time for

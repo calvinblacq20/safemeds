@@ -219,7 +219,7 @@ function LegalContent() {
               <span className="text-xl">🛡️</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+              <h1 className="text-xl font-normal text-gray-900 dark:text-white leading-tight">
                 SafeMeds
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -374,7 +374,7 @@ function LegalContent() {
 
             {/* FAQs Accordion Panel (No-print) */}
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-gray-150 dark:border-gray-700/50 no-print">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <h3 className="text-2xl font-normal text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <span>🤔</span> Legal & Trust FAQs
               </h3>
               <div className="space-y-3">

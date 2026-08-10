@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { useSearchParams } from "next/navigation";
+import { Search } from "lucide-react";
 import Navigation from "@/components/Common/Navigation";
 import { getAnonymousConsultationStatus } from "@/services/consultationService";
+import { Button, Card, StatusBadge, TextField } from "@/components/ui";
 
 interface TrackedMessage {
   content: string;
@@ -37,11 +38,36 @@ interface TrackedConsultation {
   prescriptions: TrackedPrescription[];
 }
 
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** Renders a labelled block only when the consultation actually carries it,
+ *  so absent optional fields don't leave empty headings behind. */
+function Detail({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+  return (
+    <div>
+      <dt className="text-sm text-ink-muted">{label}</dt>
+      <dd className="mt-1 text-sm leading-relaxed text-ink">{value}</dd>
+    </div>
+  );
+}
+
 function TrackConsultationContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [sessionId, setSessionId] = useState(searchParams.get("sessionId") || "");
-  const [consultation, setConsultation] = useState<TrackedConsultation | null>(null);
+  const [sessionId, setSessionId] = useState(
+    searchParams.get("sessionId") || "",
+  );
+  const [consultation, setConsultation] = useState<TrackedConsultation | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,7 +79,7 @@ function TrackConsultationContent() {
 
     setLoading(true);
     setError("");
-    
+
     try {
       const response = await getAnonymousConsultationStatus(sessionId);
       if (response) {
@@ -61,8 +87,8 @@ function TrackConsultationContent() {
       } else {
         setError("Session not found or has expired");
       }
-    } catch (error) {
-      console.error("Error tracking consultation:", error);
+    } catch (err) {
+      console.error("Error tracking consultation:", err);
       setError("Failed to track consultation. Please try again.");
     } finally {
       setLoading(false);
@@ -70,278 +96,171 @@ function TrackConsultationContent() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (sessionId) {
-      handleTrack();
-    }
+    if (sessionId) handleTrack();
+    // Runs on mount when a sessionId arrives via the query string.
   }, [sessionId, handleTrack]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800";
-      case "IN_PROGRESS":
-        return "bg-blue-100 text-blue-800";
-      case "COMPLETED":
-        return "bg-green-100 text-green-800";
-      case "CANCELLED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "⏳";
-      case "IN_PROGRESS":
-        return "👨‍⚕️";
-      case "COMPLETED":
-        return "✅";
-      case "CANCELLED":
-        return "❌";
-      default:
-        return "📋";
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-bg">
       <Navigation title="Track Consultation" userRole="client" />
-      
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8"
-        >
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">🔍</div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Track Your Consultation
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
-              Enter your session ID to check the status of your anonymous consultation
-            </p>
-          </div>
 
-          {/* Session ID Input */}
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Session ID
-            </label>
-            <div className="flex space-x-4">
-              <input
-                type="text"
-                value={sessionId}
-                onChange={(e) => setSessionId(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your session ID..."
-              />
-              <button
-                onClick={handleTrack}
-                disabled={loading || !sessionId.trim()}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Tracking..." : "Track"}
-              </button>
-            </div>
-            {error && (
-              <p className="text-red-600 text-sm mt-2">{error}</p>
-            )}
-          </div>
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        {/* No heading here: Navigation already renders the page title as the
+            document's h1, and a second one would duplicate it. */}
+        <p className="max-w-xl text-ink-muted">
+          Enter your session ID to check the status of your anonymous
+          consultation.
+        </p>
 
-          {/* Consultation Status */}
-          {consultation && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
+        <Card className="mt-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleTrack();
+            }}
+            className="flex flex-col gap-3 sm:flex-row sm:items-end"
+          >
+            <TextField
+              label="Session ID"
+              wrapperClassName="flex-1"
+              placeholder="Enter your session ID…"
+              value={sessionId}
+              error={error}
+              onChange={(e) => {
+                setSessionId(e.target.value);
+                if (error) setError("");
+              }}
+            />
+            <Button
+              type="submit"
+              loading={loading}
+              className="sm:mb-0"
+              icon={<Search className="h-4 w-4" aria-hidden />}
             >
-              {/* Status Card */}
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <span className="text-3xl mr-3">{getStatusIcon(consultation.status)}</span>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Consultation Status
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Last updated: {formatDate(consultation.updatedAt)}
+              {loading ? "Checking…" : "Track"}
+            </Button>
+          </form>
+        </Card>
+
+        {consultation && (
+          <section className="mt-6 space-y-5">
+            <Card>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm capitalize text-ink-muted">
+                    {consultation.type.replace(/_/g, " ").toLowerCase()}
+                  </p>
+                  <h2 className="mt-1 text-2xl text-ink">
+                    Consultation
+                    {consultation.anonymousId
+                      ? ` · ${consultation.anonymousId}`
+                      : ""}
+                  </h2>
+                </div>
+                <StatusBadge status={consultation.status} />
+              </div>
+
+              <dl className="mt-6 space-y-4">
+                <Detail label="Description" value={consultation.description} />
+                <Detail label="Symptoms" value={consultation.symptoms} />
+                <Detail label="Allergies" value={consultation.allergies} />
+                <Detail
+                  label="Current medications"
+                  value={consultation.medications}
+                />
+              </dl>
+
+              <p className="mt-6 border-t border-line pt-4 text-xs text-ink-muted">
+                Opened {formatDate(consultation.createdAt)} · Last updated{" "}
+                {formatDate(consultation.updatedAt)}
+              </p>
+            </Card>
+
+            <Card>
+              <h3 className="text-xl text-ink">Messages</h3>
+              {consultation.messages.length === 0 ? (
+                <p className="mt-3 text-sm text-ink-muted">
+                  No messages yet. A pharmacist will reply here.
+                </p>
+              ) : (
+                <ul className="mt-4 space-y-3">
+                  {consultation.messages.map((message, index) => (
+                    <li
+                      key={index}
+                      className={
+                        message.isFromPharmacist
+                          ? "rounded-2xl bg-surface-muted p-4"
+                          : "rounded-2xl bg-brand p-4 text-brand-ink"
+                      }
+                    >
+                      <p className="text-sm leading-relaxed">
+                        {message.content}
                       </p>
-                    </div>
-                  </div>
-                  <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(consultation.status)}`}>
-                    {consultation.status.replace("_", " ")}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Type:</span>
-                    <span className="ml-2 text-gray-900 dark:text-gray-100 capitalize">{consultation.type}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Created:</span>
-                    <span className="ml-2 text-gray-900 dark:text-gray-100">{formatDate(consultation.createdAt)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Consultation Details */}
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Consultation Details</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                    <p className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">{consultation.description}</p>
-                  </div>
-                  
-                  {consultation.symptoms && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Symptoms</label>
-                      <p className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">{consultation.symptoms}</p>
-                    </div>
-                  )}
-                  
-                  {consultation.medications && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Medications</label>
-                      <p className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">{consultation.medications}</p>
-                    </div>
-                  )}
-                  
-                  {consultation.allergies && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Allergies</label>
-                      <p className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">{consultation.allergies}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Messages */}
-              {consultation.messages && consultation.messages.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Messages</h4>
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {consultation.messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`p-4 rounded-lg ${
+                      <p
+                        className={`mt-2 text-xs ${
                           message.isFromPharmacist
-                            ? "bg-blue-50 border-l-4 border-blue-500"
-                            : "bg-gray-50 border-l-4 border-gray-400"
+                            ? "text-ink-muted"
+                            : "text-brand-ink/70"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {message.isFromPharmacist ? "Pharmacist" : "You"}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {formatDate(message.createdAt)}
-                          </span>
-                        </div>
-                        <p className="text-gray-900 dark:text-gray-100">{message.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                        {message.isFromPharmacist ? "Pharmacist" : "You"} ·{" "}
+                        {formatDate(message.createdAt)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               )}
+            </Card>
 
-              {/* Prescriptions */}
-              {consultation.prescriptions && consultation.prescriptions.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Prescriptions</h4>
-                  <div className="space-y-4">
-                    {consultation.prescriptions.map((prescription, index) => (
-                      <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <h5 className="font-medium text-gray-900 dark:text-white">
-                            {prescription.medication.name}
-                          </h5>
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(prescription.status)}`}>
-                            {prescription.status}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Dosage:</span>
-                            <span className="ml-2 text-gray-900 dark:text-gray-100">{prescription.dosage}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Frequency:</span>
-                            <span className="ml-2 text-gray-900 dark:text-gray-100">{prescription.frequency}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Quantity:</span>
-                            <span className="ml-2 text-gray-900 dark:text-gray-100">{prescription.quantity}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Duration:</span>
-                            <span className="ml-2 text-gray-900 dark:text-gray-100">{prescription.duration}</span>
-                          </div>
-                        </div>
-                        {prescription.instructions && (
-                          <div className="mt-3">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Instructions:</span>
-                            <p className="text-gray-900 dark:text-gray-100 mt-1">{prescription.instructions}</p>
-                          </div>
-                        )}
+            <Card>
+              <h3 className="text-xl text-ink">Prescriptions</h3>
+              {consultation.prescriptions.length === 0 ? (
+                <p className="mt-3 text-sm text-ink-muted">
+                  No prescriptions have been issued for this consultation.
+                </p>
+              ) : (
+                <ul className="mt-4 space-y-3">
+                  {consultation.prescriptions.map((prescription, index) => (
+                    <li
+                      key={index}
+                      className="rounded-2xl bg-surface-muted p-4"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <p className="text-ink">
+                          {prescription.medication.name}
+                        </p>
+                        <StatusBadge status={prescription.status} />
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <p className="mt-1 text-sm text-ink-muted">
+                        {prescription.dosage} · {prescription.frequency} ·{" "}
+                        {prescription.duration} · Qty {prescription.quantity}
+                      </p>
+                      {prescription.instructions && (
+                        <p className="mt-2 text-sm leading-relaxed text-ink">
+                          {prescription.instructions}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               )}
-
-              {/* Actions */}
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => router.push(`/chat/${consultation.id}?anonymousId=${consultation.anonymousId}`)}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                >
-                  Chat with Pharmacist
-                </button>
-                <button
-                  onClick={() => router.push("/consult")}
-                  className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                >
-                  New Consultation
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Help Section */}
-          <div className="mt-8 bg-yellow-50 rounded-xl p-6 border border-yellow-200">
-            <h4 className="font-semibold text-yellow-800 mb-2">Need Help?</h4>
-            <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• Your session ID was provided when you submitted your consultation</li>
-              <li>• If you&apos;ve lost your session ID, you&apos;ll need to submit a new consultation</li>
-              <li>• For emergencies, please contact emergency services immediately</li>
-              <li>• Sessions expire after 7 days for security reasons</li>
-            </ul>
-          </div>
-        </motion.div>
+            </Card>
+          </section>
+        )}
       </main>
     </div>
   );
-} 
+}
 
 export default function TrackConsultationPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800" /> }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-bg px-4 py-10">
+          <div className="mx-auto h-64 max-w-3xl animate-pulse rounded-card bg-surface-sunken" />
+        </div>
+      }
+    >
       <TrackConsultationContent />
     </Suspense>
   );

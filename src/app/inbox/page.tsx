@@ -40,7 +40,7 @@ export default function InboxPage() {
           userRole={(user?.role?.toLowerCase() as "pharmacy" | "admin") || "pharmacy"}
         />
         <main className="max-w-3xl mx-auto px-4 py-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <h1 className="text-2xl font-normal text-gray-900 dark:text-white mb-6">
             Active Consultation Chats
           </h1>
 

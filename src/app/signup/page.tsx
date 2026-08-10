@@ -1,10 +1,14 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Lock, ShieldPlus } from "lucide-react";
 import { LEGAL_VERSION } from "@/lib/legal";
-import ThreadsBackground from "@/components/effects/ThreadsBackground";
+import ThemeToggle from "@/components/Common/ThemeToggle";
+import { Button, TextField } from "@/components/ui";
+import { cn } from "@/lib/cn";
 
 interface FormData {
   username: string;
@@ -22,31 +26,36 @@ interface FormData {
   zipCode: string;
 }
 
-interface FormErrors {
-  [key: string]: string;
-}
+type Role = "CLIENT" | "PHARMACY" | "ADMIN";
+
+const ROLES: { value: Role; label: string }[] = [
+  { value: "CLIENT", label: "Student" },
+  { value: "PHARMACY", label: "Pharmacist" },
+  { value: "ADMIN", label: "Admin" },
+];
+
+const EMPTY: FormData = {
+  username: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  firstName: "",
+  lastName: "",
+  phone: "",
+  licenseNumber: "",
+  pharmacyName: "",
+  address: "",
+  city: "",
+  state: "",
+  zipCode: "",
+};
 
 export default function SignupPage() {
-  const [formData, setFormData] = useState<FormData>({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    firstName: "",
-    lastName: "",
-    phone: "",
-    licenseNumber: "",
-    pharmacyName: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-  });
-
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [formData, setFormData] = useState<FormData>(EMPTY);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [userType, setUserType] = useState<"CLIENT" | "PHARMACY" | "ADMIN">("CLIENT");
+  const [userType, setUserType] = useState<Role>("CLIENT");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailChecking, setIsEmailChecking] = useState(false);
@@ -62,114 +71,134 @@ export default function SignupPage() {
         session.user.role === "ADMIN"
           ? "/admin"
           : session.user.role === "PHARMACY"
-          ? "/pharmacy-dashboard"
-          : "/client-dashboard";
+            ? "/pharmacy-dashboard"
+            : "/client-dashboard";
       router.replace(dashboardPath);
     }
   }, [status, session, router]);
 
-  const checkEmailAvailability = async (email: string) => {
+  // Debounced availability checks. These live in effects so the timer is
+  // actually cancelled between keystrokes — returning a cleanup from the
+  // change handler did nothing, so every character hit the API.
+  useEffect(() => {
+    const email = formData.email;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-    setIsEmailChecking(true);
-    try {
-      const response = await fetch(`/api/auth/signup?email=${encodeURIComponent(email)}`);
-      const data = await response.json();
-      if (data.exists) {
-        setErrors((prev) => ({ ...prev, email: "This email is already registered." }));
-      } else {
-        setErrors((prev) => ({ ...prev, email: "" }));
-      }
-    } catch {
-      setErrors((prev) => ({ ...prev, email: "Unable to verify email availability." }));
-    } finally {
-      setIsEmailChecking(false);
-    }
-  };
 
-  const checkLicenseAvailability = async (licenseNumber: string) => {
-    if (!licenseNumber || userType !== "PHARMACY") return;
-    setIsLicenseChecking(true);
-    try {
-      const response = await fetch(
-        `/api/auth/verify-license?licenseNumber=${encodeURIComponent(licenseNumber)}`
-      );
-      const data = await response.json();
-      if (!data.isValid) {
-        setErrors((prev) => ({ ...prev, licenseNumber: data.error || "Invalid license number." }));
-      } else {
-        setErrors((prev) => ({ ...prev, licenseNumber: "" }));
+    const timer = setTimeout(async () => {
+      setIsEmailChecking(true);
+      try {
+        const response = await fetch(
+          `/api/auth/signup?email=${encodeURIComponent(email)}`,
+        );
+        const data = await response.json();
+        setErrors((prev) => ({
+          ...prev,
+          email: data.exists ? "This email is already registered." : "",
+        }));
+      } catch {
+        setErrors((prev) => ({
+          ...prev,
+          email: "Unable to verify email availability.",
+        }));
+      } finally {
+        setIsEmailChecking(false);
       }
-    } catch {
-      setErrors((prev) => ({ ...prev, licenseNumber: "Unable to verify license number." }));
-    } finally {
-      setIsLicenseChecking(false);
-    }
-  };
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.email]);
+
+  useEffect(() => {
+    const licenseNumber = formData.licenseNumber;
+    if (!licenseNumber || userType !== "PHARMACY") return;
+
+    const timer = setTimeout(async () => {
+      setIsLicenseChecking(true);
+      try {
+        const response = await fetch(
+          `/api/auth/verify-license?licenseNumber=${encodeURIComponent(licenseNumber)}`,
+        );
+        const data = await response.json();
+        setErrors((prev) => ({
+          ...prev,
+          licenseNumber: data.isValid
+            ? ""
+            : data.error || "Invalid license number.",
+        }));
+      } catch {
+        setErrors((prev) => ({
+          ...prev,
+          licenseNumber: "Unable to verify license number.",
+        }));
+      } finally {
+        setIsLicenseChecking(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.licenseNumber, userType]);
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const next: Record<string, string> = {};
 
     if (!formData.username.trim()) {
-      newErrors.username = "Username is required.";
+      next.username = "Username is required.";
     } else if (formData.username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters.";
+      next.username = "Username must be at least 3 characters.";
     } else if (formData.username.length > 50) {
-      newErrors.username = "Username must be fewer than 50 characters.";
+      next.username = "Username must be fewer than 50 characters.";
     } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
-      newErrors.username = "Only letters, numbers, hyphens, and underscores allowed.";
+      next.username = "Only letters, numbers, hyphens, and underscores allowed.";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required.";
+      next.email = "Email is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Enter a valid email address.";
+      next.email = "Enter a valid email address.";
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required.";
+      next.password = "Password is required.";
     } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters.";
+      next.password = "Password must be at least 8 characters.";
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = "Include uppercase, lowercase, and a number.";
+      next.password = "Include uppercase, lowercase, and a number.";
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match.";
+      next.confirmPassword = "Passwords do not match.";
     }
 
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required.";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required.";
+    if (!formData.firstName.trim()) next.firstName = "First name is required.";
+    if (!formData.lastName.trim()) next.lastName = "Last name is required.";
 
     if (userType === "PHARMACY") {
-      if (!formData.licenseNumber.trim()) newErrors.licenseNumber = "License number is required.";
-      if (!formData.phone.trim()) {
-        newErrors.phone = "Phone number is required.";
-      } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-\(\)]/g, ""))) {
-        newErrors.phone = "Enter a valid phone number.";
+      if (!formData.licenseNumber.trim()) {
+        next.licenseNumber = "License number is required.";
       }
-      if (!formData.pharmacyName.trim()) newErrors.pharmacyName = "Pharmacy name is required.";
+      if (!formData.phone.trim()) {
+        next.phone = "Phone number is required.";
+      } else if (
+        !/^[+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-()]/g, ""))
+      ) {
+        next.phone = "Enter a valid phone number.";
+      }
+      if (!formData.pharmacyName.trim()) {
+        next.pharmacyName = "Pharmacy name is required.";
+      }
     }
 
     if (!agreeToTerms) {
-      newErrors.agreeToTerms = "You must agree to the terms to continue.";
+      next.agreeToTerms = "You must agree to the terms to continue.";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
-
-    if (field === "email") {
-      const timeoutId = setTimeout(() => checkEmailAvailability(value), 500);
-      return () => clearTimeout(timeoutId);
-    }
-    if (field === "licenseNumber" && userType === "PHARMACY") {
-      const timeoutId = setTimeout(() => checkLicenseAvailability(value), 500);
-      return () => clearTimeout(timeoutId);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,28 +207,15 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      const signupData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: userType,
-        phone: formData.phone,
-        licenseNumber: formData.licenseNumber,
-        pharmacyName: formData.pharmacyName,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zipCode,
-        termsAccepted: agreeToTerms,
-        termsVersion: LEGAL_VERSION,
-      };
-
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signupData),
+        body: JSON.stringify({
+          ...formData,
+          role: userType,
+          termsAccepted: agreeToTerms,
+          termsVersion: LEGAL_VERSION,
+        }),
       });
 
       const data = await response.json();
@@ -223,16 +239,22 @@ export default function SignupPage() {
               role: userType,
             };
 
-      const result = await signIn("credentials", { ...loginParams, redirect: false });
+      const result = await signIn("credentials", {
+        ...loginParams,
+        redirect: false,
+      });
 
       if (result?.error) {
         setErrors({
-          general: "Account created. Auto-login failed — please sign in manually.",
+          general:
+            "Account created. Auto-login failed — please sign in manually.",
         });
       } else if (result?.ok) {
         setIsSuccess(true);
       } else {
-        setErrors({ general: "Account created. Please sign in to continue." });
+        setErrors({
+          general: "Account created. Please sign in to continue.",
+        });
       }
     } catch {
       setErrors({ general: "Something went wrong. Please try again." });
@@ -241,409 +263,333 @@ export default function SignupPage() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      firstName: "",
-      lastName: "",
-      phone: "",
-      licenseNumber: "",
-      pharmacyName: "",
-      address: "",
-      city: "",
-      state: "",
-      zipCode: "",
-    });
-    setErrors({});
-    setIsSuccess(false);
-  };
+  const isPharmacy = userType === "PHARMACY";
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-gray-950">
-      {/* Left brand panel */}
-      <div className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 flex-col justify-between overflow-hidden bg-gray-950 dark:bg-black p-10">
-        <ThreadsBackground
-          wrapperClassName="absolute inset-0 pointer-events-none opacity-50"
-          color={[0.36, 0.29, 1]}
-          amplitude={1.2}
-          distance={0.2}
-          enableMouseInteraction
+    <div className="min-h-screen bg-bg lg:flex">
+      <aside className="relative hidden lg:flex lg:w-[42%] xl:w-2/5 flex-col justify-between overflow-hidden p-10 text-white bg-slate-950">
+        <img
+          src="/images/pexels-artempodrez-5726696.jpg"
+          alt="Pharmacy Research Lab"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-40 mix-blend-luminosity scale-105"
         />
-        <div className="relative">
-          <span className="text-white text-xl font-semibold tracking-tight">SafeMeds</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-950/60" />
+
+        <div className="relative z-10 flex items-center gap-2.5">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-brand-ink shadow-lg">
+            <ShieldPlus className="h-6 w-6" aria-hidden />
+          </span>
+          <span className="text-2xl font-bold tracking-tight text-white">SafeMeds</span>
         </div>
-        <div className="relative">
-          <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-            Secure healthcare management platform for students and licensed pharmacists.
-            All data is encrypted end-to-end.
+
+        <div className="relative z-10 my-auto backdrop-blur-md bg-white/10 p-6 rounded-3xl border border-white/20 text-white shadow-2xl">
+          <h2 className="text-2xl font-medium text-white mb-2">Anonymous, Safe & Verified Care</h2>
+          <p className="text-sm leading-relaxed text-white/80">
+            Create an account to consult with pharmacists, order prescriptions discreetly, and manage your health safely from your phone.
           </p>
         </div>
-        <div className="relative">
-          <p className="text-gray-600 text-xs">
-            &copy; {new Date().getFullYear()} SafeMeds. All rights reserved.
-          </p>
-        </div>
-      </div>
 
-      {/* Right form panel */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16 xl:px-24 overflow-y-auto">
-        <div className="w-full max-w-lg mx-auto">
+        <p className="relative z-10 text-xs text-white/60">
+          &copy; {new Date().getFullYear()} SafeMeds. All rights reserved.
+        </p>
+      </aside>
 
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Create an account
-            </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Already have an account?{" "}
-              <button
-                onClick={() => router.push("/auth")}
-                className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-              >
-                Sign in
-              </button>
-            </p>
+      <main className="flex flex-1 flex-col justify-center px-4 py-10 sm:px-8">
+        <div className="mx-auto w-full max-w-lg">
+          <div className="mb-6 flex items-center justify-between lg:hidden">
+            <span className="flex items-center gap-2.5 text-ink">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand">
+                <ShieldPlus className="h-5 w-5 text-brand-ink" aria-hidden />
+              </span>
+              <span className="text-lg tracking-tight">SafeMeds</span>
+            </span>
+            <ThemeToggle variant="icon" size="md" />
           </div>
 
-          {/* Account type tabs */}
-          <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-              Account type
-            </label>
-            <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 p-1 bg-gray-50 dark:bg-gray-900 gap-1">
-              {[
-                { value: "CLIENT", label: "Student" },
-                { value: "PHARMACY", label: "Pharmacist" },
-              ].map((type) => (
+          <div className="rounded-card bg-surface p-6 shadow-card sm:p-8">
+            <header className="mb-6">
+              <h1 className="text-2xl text-ink">Create an account</h1>
+              <p className="mt-1 text-sm text-ink-muted">
+                Already have an account?{" "}
                 <button
-                  key={type.value}
-                  type="button"
-                  onClick={() => {
-                    setUserType(type.value as "CLIENT" | "PHARMACY" | "ADMIN");
-                    resetForm();
-                  }}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                    userType === type.value
-                      ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                  }`}
+                  onClick={() => router.push("/auth")}
+                  className="cursor-pointer font-semibold text-brand transition-colors hover:text-brand-hover"
                 >
-                  {type.label}
+                  Sign in
                 </button>
-              ))}
-            </div>
-          </div>
+              </p>
+            </header>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-
-            {/* Name row */}
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="First name" error={errors.firstName} required>
-                <input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
-                  placeholder="Jane"
-                  className={inputClass(!!errors.firstName)}
-                />
-              </Field>
-              <Field label="Last name" error={errors.lastName} required>
-                <input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
-                  placeholder="Smith"
-                  className={inputClass(!!errors.lastName)}
-                />
-              </Field>
-            </div>
-
-            {/* Username */}
-            <Field label="Username" error={errors.username} required>
-              <input
-                type="text"
-                value={formData.username}
-                onChange={(e) => handleInputChange("username", e.target.value)}
-                placeholder="janesmith"
-                className={inputClass(!!errors.username)}
-              />
-            </Field>
-
-            {/* Email */}
-            <Field
-              label={
-                <span>
-                  Email{" "}
-                  {isEmailChecking && (
-                    <span className="text-gray-400 font-normal text-xs ml-1">Checking...</span>
-                  )}
-                </span>
-              }
-              error={errors.email}
-              required
-            >
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="jane@example.com"
-                className={inputClass(!!errors.email)}
-              />
-            </Field>
-
-            {/* Pharmacy-specific fields */}
-            {userType === "PHARMACY" && (
-              <>
-                <Field
-                  label={
-                    <span>
-                      License number{" "}
-                      {isLicenseChecking && (
-                        <span className="text-gray-400 font-normal text-xs ml-1">Verifying...</span>
+            <div className="mb-6">
+              <p className="mb-2 text-sm font-medium text-ink">Account type</p>
+              <div
+                role="tablist"
+                aria-label="Account type"
+                className="flex gap-1 rounded-2xl bg-surface-muted p-1"
+              >
+                {ROLES.map((role) => {
+                  const selected = userType === role.value;
+                  return (
+                    <button
+                      key={role.value}
+                      role="tab"
+                      type="button"
+                      aria-selected={selected}
+                      onClick={() => {
+                        setUserType(role.value);
+                        setErrors({});
+                      }}
+                      className={cn(
+                        "h-11 flex-1 cursor-pointer rounded-xl text-sm font-medium",
+                        "transition-colors duration-200",
+                        selected
+                          ? "bg-brand text-brand-ink"
+                          : "text-ink-muted hover:text-ink",
                       )}
-                    </span>
-                  }
-                  error={errors.licenseNumber}
+                    >
+                      {role.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  label="First name"
                   required
-                >
-                  <input
-                    type="text"
-                    value={formData.licenseNumber}
-                    onChange={(e) => handleInputChange("licenseNumber", e.target.value)}
+                  autoComplete="given-name"
+                  value={formData.firstName}
+                  error={errors.firstName}
+                  onChange={(e) =>
+                    handleInputChange("firstName", e.target.value)
+                  }
+                />
+                <TextField
+                  label="Last name"
+                  required
+                  autoComplete="family-name"
+                  value={formData.lastName}
+                  error={errors.lastName}
+                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                />
+              </div>
+
+              <TextField
+                label="Username"
+                required
+                autoComplete="username"
+                placeholder="your_username"
+                hint="Letters, numbers, hyphens and underscores."
+                value={formData.username}
+                error={errors.username}
+                onChange={(e) => handleInputChange("username", e.target.value)}
+              />
+
+              <TextField
+                label="Email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="you@example.com"
+                hint={isEmailChecking ? "Checking availability…" : undefined}
+                value={formData.email}
+                error={errors.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+              />
+
+              {isPharmacy && (
+                <>
+                  <TextField
+                    label="License number"
+                    required
+                    autoComplete="off"
                     placeholder="e.g. RPh-123456"
-                    className={inputClass(!!errors.licenseNumber)}
+                    hint={
+                      isLicenseChecking ? "Verifying license…" : undefined
+                    }
+                    value={formData.licenseNumber}
+                    error={errors.licenseNumber}
+                    onChange={(e) =>
+                      handleInputChange("licenseNumber", e.target.value)
+                    }
                   />
-                </Field>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Pharmacy name" error={errors.pharmacyName} required>
-                    <input
-                      type="text"
-                      value={formData.pharmacyName}
-                      onChange={(e) => handleInputChange("pharmacyName", e.target.value)}
-                      placeholder="City Pharmacy"
-                      className={inputClass(!!errors.pharmacyName)}
-                    />
-                  </Field>
-                  <Field label="Phone" error={errors.phone} required>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                      placeholder="+1 555 000 0000"
-                      className={inputClass(!!errors.phone)}
-                    />
-                  </Field>
-                </div>
-
-                <Field label="Address" error="">
-                  <input
-                    type="text"
+                  <TextField
+                    label="Pharmacy name"
+                    required
+                    autoComplete="organization"
+                    value={formData.pharmacyName}
+                    error={errors.pharmacyName}
+                    onChange={(e) =>
+                      handleInputChange("pharmacyName", e.target.value)
+                    }
+                  />
+                  <TextField
+                    label="Phone"
+                    type="tel"
+                    required
+                    autoComplete="tel"
+                    value={formData.phone}
+                    error={errors.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                  />
+                  <TextField
+                    label="Address"
+                    autoComplete="street-address"
                     value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
-                    placeholder="123 Main St"
-                    className={inputClass(false)}
+                    error={errors.address}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
                   />
-                </Field>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <Field label="City" error="">
-                    <input
-                      type="text"
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <TextField
+                      label="City"
+                      autoComplete="address-level2"
                       value={formData.city}
+                      error={errors.city}
                       onChange={(e) => handleInputChange("city", e.target.value)}
-                      placeholder="New York"
-                      className={inputClass(false)}
                     />
-                  </Field>
-                  <Field label="State" error="">
-                    <input
-                      type="text"
+                    <TextField
+                      label="State"
+                      autoComplete="address-level1"
                       value={formData.state}
-                      onChange={(e) => handleInputChange("state", e.target.value)}
-                      placeholder="NY"
-                      className={inputClass(false)}
+                      error={errors.state}
+                      onChange={(e) =>
+                        handleInputChange("state", e.target.value)
+                      }
                     />
-                  </Field>
-                  <Field label="Zip code" error="">
-                    <input
-                      type="text"
+                    <TextField
+                      label="ZIP"
+                      autoComplete="postal-code"
                       value={formData.zipCode}
-                      onChange={(e) => handleInputChange("zipCode", e.target.value)}
-                      placeholder="10001"
-                      className={inputClass(false)}
+                      error={errors.zipCode}
+                      onChange={(e) =>
+                        handleInputChange("zipCode", e.target.value)
+                      }
                     />
-                  </Field>
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              )}
 
-            {/* Password row */}
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Password" error={errors.password} required>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    placeholder="Min. 8 characters"
-                    className={inputClass(!!errors.password) + " pr-10"}
-                  />
+              <TextField
+                label="Password"
+                required
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                hint="At least 8 characters, with upper, lower and a number."
+                value={formData.password}
+                error={errors.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                trailing={
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs font-medium"
-                    tabIndex={-1}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="h-11 cursor-pointer rounded-lg px-3 text-xs font-semibold text-ink-muted transition-colors hover:text-ink"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
-                </div>
-              </Field>
-              <Field label="Confirm password" error={errors.confirmPassword} required>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    placeholder="Repeat password"
-                    className={inputClass(!!errors.confirmPassword) + " pr-10"}
-                  />
+                }
+              />
+
+              <TextField
+                label="Confirm password"
+                required
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={formData.confirmPassword}
+                error={errors.confirmPassword}
+                onChange={(e) =>
+                  handleInputChange("confirmPassword", e.target.value)
+                }
+                trailing={
                   <button
                     type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs font-medium"
-                    tabIndex={-1}
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="h-11 cursor-pointer rounded-lg px-3 text-xs font-semibold text-ink-muted transition-colors hover:text-ink"
                   >
                     {showConfirmPassword ? "Hide" : "Show"}
                   </button>
-                </div>
-              </Field>
-            </div>
-
-            {/* Terms */}
-            <div className="flex items-start gap-3 pt-1">
-              <input
-                id="agreeToTerms"
-                type="checkbox"
-                checked={agreeToTerms}
-                onChange={(e) => {
-                  setAgreeToTerms(e.target.checked);
-                  if (errors.agreeToTerms) setErrors((prev) => ({ ...prev, agreeToTerms: "" }));
-                }}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-gray-800 cursor-pointer flex-shrink-0"
+                }
               />
-              <label htmlFor="agreeToTerms" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
-                I agree to the{" "}
-                <button
-                  type="button"
-                  onClick={() => router.push("/legal?tab=terms")}
-                  className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  Terms of Service
-                </button>
-                ,{" "}
-                <button
-                  type="button"
-                  onClick={() => router.push("/legal?tab=privacy")}
-                  className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  Privacy Policy
-                </button>
-                , and{" "}
-                <button
-                  type="button"
-                  onClick={() => router.push("/legal?tab=hipaa")}
-                  className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  HIPAA Statement
-                </button>
-                .
-              </label>
-            </div>
-            {errors.agreeToTerms && (
-              <p className="text-red-500 text-xs -mt-2">{errors.agreeToTerms}</p>
-            )}
 
-            {/* Status messages */}
-            {isSuccess && (
-              <div className="rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 px-4 py-3 text-sm text-green-800 dark:text-green-300">
-                Account created. Redirecting to your dashboard&hellip;
-                {userType === "PHARMACY" && (
-                  <p className="mt-1 text-green-700 dark:text-green-400">
-                    Once signed in, please{" "}
-                    <button
-                      type="button"
-                      onClick={() => router.push("/verify-license")}
-                      className="underline font-medium"
-                    >
-                      verify your pharmacy license
-                    </button>{" "}
-                    to start providing consultations.
+              <div>
+                <label className="flex cursor-pointer items-start gap-3 text-sm text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={agreeToTerms}
+                    onChange={(e) => {
+                      setAgreeToTerms(e.target.checked);
+                      if (errors.agreeToTerms) {
+                        setErrors((prev) => ({ ...prev, agreeToTerms: "" }));
+                      }
+                    }}
+                    aria-invalid={errors.agreeToTerms ? true : undefined}
+                    className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-brand"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <a href="/legal?tab=terms" className="font-semibold text-brand hover:text-brand-hover">
+                      terms of service
+                    </a>{" "}
+                    and{" "}
+                    <a href="/legal?tab=privacy" className="font-semibold text-brand hover:text-brand-hover">
+                      privacy policy
+                    </a>
+                    .
+                  </span>
+                </label>
+                {errors.agreeToTerms && (
+                  <p className="mt-1.5 text-sm text-danger">
+                    {errors.agreeToTerms}
                   </p>
                 )}
               </div>
-            )}
 
-            {errors.general && (
-              <div className="rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-                {errors.general}
-              </div>
-            )}
+              {errors.general && (
+                <p
+                  role="alert"
+                  className="rounded-2xl bg-danger-soft px-4 py-3 text-sm text-danger"
+                >
+                  {errors.general}
+                </p>
+              )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading || isEmailChecking || isLicenseChecking || !agreeToTerms}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 dark:disabled:bg-indigo-800 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed mt-2"
-            >
-              {isLoading ? "Creating account..." : "Create account"}
-            </button>
-          </form>
+              {isSuccess && (
+                <div
+                  role="status"
+                  className="rounded-2xl bg-ok-soft px-4 py-3 text-sm text-ok"
+                >
+                  Account created. Redirecting to your dashboard…
+                  {isPharmacy && (
+                    <p className="mt-1">
+                      Once signed in, please{" "}
+                      <button
+                        type="button"
+                        onClick={() => router.push("/verify-license")}
+                        className="cursor-pointer font-semibold underline"
+                      >
+                        verify your pharmacy license
+                      </button>{" "}
+                      to start providing consultations.
+                    </p>
+                  )}
+                </div>
+              )}
 
-          <p className="mt-8 text-xs text-gray-400 dark:text-gray-600 text-center">
-            All data is encrypted and handled in accordance with HIPAA guidelines.
+              <Button type="submit" size="lg" fullWidth loading={isLoading}>
+                {isLoading ? "Creating account…" : "Create account"}
+              </Button>
+            </form>
+          </div>
+
+          <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-ink-muted">
+            <Lock className="h-3.5 w-3.5" aria-hidden />
+            Encrypted and handled per HIPAA guidelines.
           </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ---- Helpers ----
-
-function inputClass(hasError: boolean): string {
-  return [
-    "w-full px-3 py-2 rounded-lg text-sm border bg-white dark:bg-gray-900",
-    "text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600",
-    "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors",
-    hasError
-      ? "border-red-400 dark:border-red-600"
-      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
-  ].join(" ");
-}
-
-function Field({
-  label,
-  error,
-  required,
-  children,
-}: {
-  label: React.ReactNode;
-  error: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-        {label}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
-      </label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      </main>
     </div>
   );
 }
