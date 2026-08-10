@@ -1,4 +1,3 @@
-// @ts-expect-error firebase/app type declaration resolution
 import { initializeApp, setLogLevel } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, type User } from "firebase/auth";
 import {

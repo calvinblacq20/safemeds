@@ -4,7 +4,6 @@ import {
   getValue,
   RemoteConfig,
 } from "firebase/remote-config";
-// @ts-expect-error firebase/app module resolution
 import { setLogLevel } from "firebase/app"; // Correct import location
 import { app } from "./firebase";
 
